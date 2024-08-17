@@ -30,11 +30,37 @@ async function run() {
     const productsCollection=client.db('productCollection').collection('products');
 
     app.get('/products',async(req,res)=>{
+      const filter=req.query;
+      const {  brand, category, minPrice, maxPrice,} = req.query;
+      console.log(filter);
+      const query={   
+    productName:{$regex:filter.search, $options:'i'}
+      };
+
+      if (brand) {
+        query.brandName = brand;
+      }
+    
+      if (category) {
+        query.category = category;
+      }
+    
+      if (minPrice || maxPrice) {
+        query.price = {};
+        if (minPrice) query.price.$gte = parseFloat(minPrice);
+        if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+      }
+
+      const options={
+            sort:{
+              price:filter.sort==='asc'?1:-1
+            }
+      }
       const page = parseInt(req.query.page);
       const size=parseInt(req.query.size);
       console.log('pagination query', page,size);
 
-        const result = await productsCollection.find()
+        const result = await productsCollection.find(query,options)
         .skip(page*size)
         .limit(size)
         .toArray();
