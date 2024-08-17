@@ -30,9 +30,22 @@ async function run() {
     const productsCollection=client.db('productCollection').collection('products');
 
     app.get('/products',async(req,res)=>{
-            const result=await productsCollection.find().toArray();
-            res.send(result);
+      const page = parseInt(req.query.page);
+      const size=parseInt(req.query.size);
+      console.log('pagination query', page,size);
+
+        const result = await productsCollection.find()
+        .skip(page*size)
+        .limit(size)
+        .toArray();
+        res.send(result);
     })
+
+    app.get('/productsCount' , async(req,res)=>{
+      const count=await productsCollection.estimatedDocumentCount();
+      res.send({count})
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
